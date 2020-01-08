@@ -70,7 +70,7 @@ namespace Primes
             this.cancellationTokenSource = new CancellationTokenSource();
             this.DrawCoordinates(e);
             this.GetPrimesViaEratosthenesSieve(e);
-            await Task.Run(() => this.DrawPrimes(e, this.cancellationTokenSource.Token)); ;
+            await Task.Factory.StartNew(() => this.DrawPrimes(e, this.cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
         private void DrawPrimes(PaintEventArgs e, CancellationToken token)

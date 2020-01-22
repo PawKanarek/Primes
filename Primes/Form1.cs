@@ -9,31 +9,59 @@ namespace Primes
 {
     public partial class Form1 : Form
     {
-        private const int ScreenWidth = 2560;
-        private const int ScreenHeight = 2560;
-        private const int framerateMs = 17;
-
-        private Graphics graphics;
-        private readonly Brush blackBrush;
-        private bool[] primes;
-        private bool? arePrimesCounted = null;
+        private Point lastCursorPositionDuriningCapture = Point.Empty;
         private CancellationTokenSource cancellationTokenSource;
         private bool isResizing;
         private bool isDrawing;
+        private bool isCapturingMouseMovement;
+        private readonly Scene scene;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         public Form1()
         {
             this.InitializeComponent();
             this.ResizeRedraw = true;
-            this.blackBrush = Brushes.Black;
             this.Paint += this.Form1_Paint;
             this.ResizeBegin += this.Form1_ResizeBegin;
             this.ResizeEnd += this.Form1_ResizeEnd;
             this.Resize += this.Form1_Resize;
             this.MouseMove += this.Form1_MouseMove;
-            this.graphics = this.CreateGraphics();
+            this.MouseDown += this.Form1_MouseDown;
+            this.MouseUp += this.Form1_MouseUp;
+            this.scene = new Scene(this.CreateGraphics());
             //this.graphics.BeginContainer(this.graphics.VisibleClipBounds, newRect, GraphicsUnit.Pixel);
+        }
+
+        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (this.isCapturingMouseMovement)
+            {
+                this.cancellationTokenSource?.Cancel();
+                this.MouseMove -= this.MouseMove_WhenCapturing;
+                this.cancellationTokenSource?.Cancel();
+
+                this.isCapturingMouseMovement = false;
+            }
+        }
+
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            this.lastCursorPositionDuriningCapture = this.scene.Center;
+            this.MouseMove += this.MouseMove_WhenCapturing;
+            this.isCapturingMouseMovement = true;
+        }
+
+        private async void MouseMove_WhenCapturing(object sender, MouseEventArgs e)
+        {
+            var delta = new Point(this.lastCursorPositionDuriningCapture.X - e.X, this.lastCursorPositionDuriningCapture.Y - e.Y);
+
+            Debug.WriteLine($"e.X {e.X}, e.Y {e.Y}, {delta}");
+            this.scene.Center = new Point(this.scene.Center.X + delta.X, this.scene.Center.Y + delta.Y);
+            this.lastCursorPositionDuriningCapture = e.Location;
+            //Debug.WriteLine($"{this.scene.center}");
+            this.cancellationTokenSource?.Cancel();
+            this.cancellationTokenSource = new CancellationTokenSource();
+            await Task.Run(() => this.DrawPrimes(this.cancellationTokenSource.Token)); ;
         }
 
         private void Form1_MouseMove(object sender, MouseEventArgs e)
@@ -46,9 +74,7 @@ namespace Primes
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            this.cancellationTokenSource?.Cancel();
-            this.graphics.Dispose();
-            this.graphics = this.CreateGraphics();
+            //this.cancellationTokenSource?.Cancel();
         }
 
         private void Form1_ResizeEnd(object sender, EventArgs e)
@@ -66,17 +92,24 @@ namespace Primes
         {
             this.cancellationTokenSource?.Cancel();
             this.cancellationTokenSource = new CancellationTokenSource();
+            
+            if (this.scene.ActualRect == Rectangle.Empty)
+            {
+                this.scene.ActualRect = e.ClipRectangle;
+            }
+            this.scene.WholeRect = e.ClipRectangle;
+
             this.DrawCoordinates(e);
-            this.GetPrimesViaEratosthenesSieve(e);
-            await Task.Run(() => this.DrawPrimes(e, this.cancellationTokenSource.Token)); ;
+            Primes.GetPrimesViaEratosthenesSieve(e);
+            await Task.Run(() => this.DrawPrimes(this.cancellationTokenSource.Token)); ;
         }
 
-        private void DrawPrimes(PaintEventArgs e, CancellationToken token)
+        private void DrawPrimes(CancellationToken token)
         {
             try
             {
                 token.ThrowIfCancellationRequested();
-                if (!CanDraw(e))
+                if (!CanDraw())
                 {
                     return;
                 }
@@ -86,111 +119,123 @@ namespace Primes
 
                 this.isDrawing = true;
                 //this.DrawPrimesRectPattern(e, token);
-                this.DrawPrimesUlam(e, token);
+                this.scene.DrawPrimesUlam(token);
                 this.isDrawing = false;
                 stopwatch.Stop();
                 Debug.WriteLine($"Drawing took: {stopwatch.ElapsedMilliseconds}");
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
-                Debug.WriteLine($"Drawing cancelled from");
+                Debug.WriteLine($"Drawing cancelled from {ex.StackTrace}");
             }
             finally
             {
             }
 
-            bool CanDraw(PaintEventArgs eventArgs)
+            bool CanDraw()
             {
-                return this.arePrimesCounted.HasValue && this.arePrimesCounted.Value && eventArgs.ClipRectangle.Width > 0 && e.ClipRectangle.Height > 0;
+                return Primes.arePrimesCounted.HasValue && Primes.arePrimesCounted.Value && this.scene.ActualRect.Width > 0 && this.scene.ActualRect.Height > 0;
             }
         }
 
-        private void DrawPrimesUlam(PaintEventArgs e, CancellationToken token)
-        {
-            var startX = e.ClipRectangle.Width / 2;
-            var startY = e.ClipRectangle.Height / 2;
+        //private void DrawPrimesUlam(CancellationToken token)
+        //{
+        //    try
+        //    {
+        //        this.semaphore.Wait();
+        //        var e = this.paintEventArgs;
 
-            var x = startX;
-            var y = startY;
-            var totalRadius = 2;
-            var currentRadius = totalRadius;
-            var canIncrementRadius = false;
-            Direction direction = Direction.Right;
+        //        if (this.center == Point.Empty)
+        //        {
+        //            this.center = new Point(e.ClipRectangle.Width / 2, e.ClipRectangle.Height / 2);
+        //        }
 
-            // go in lenght of *curreentRadius* in *direction*, move 1 pixel at time *x++ || y-- || x-- || y++*
-            // change *driection* and reset *currentRadius* if current *currentRadius == 1* (reched corner) and every two times *if canIncrementRadius* increment *totalRadius++*
-            for (var i = 1; i < this.primes.Length; i++)
-            {
-                token.ThrowIfCancellationRequested();
+        //        Point coords = this.center;
+        //        var totalRadius = 2;
+        //        var currentRadius = totalRadius;
+        //        var canIncrementRadius = false;
+        //        Direction direction = Direction.Right;
 
-                if (this.primes[i])
-                {
-                    this.graphics.FillRectangle(this.blackBrush, x, y, 1, 1);
+        //        // go in lenght of *curreentRadius* in *direction*, move 1 pixel at time *x++ || y-- || x-- || y++*
+        //        // change *driection* and reset *currentRadius* if current *currentRadius == 1* (reched corner) and every two times *if canIncrementRadius* increment *totalRadius++* to make spiral 
+        //        for (var i = 1; i < this.primes.Length; i++)
+        //        {
+        //            token.ThrowIfCancellationRequested();
+        //            if (this.primes[i])
+        //            {
+        //                this.scene.DrawRect(coords.X, coords.Y);
+        //            }
 
-                    if (y > e.ClipRectangle.Height && x > e.ClipRectangle.Width)
-                    {
-                        break;
-                    }
-                }
+        //            if (coords.X > e.ClipRectangle.Width && coords.Y > e.ClipRectangle.Height)
+        //            {
+        //                break;
+        //            }
 
-                currentRadius--;
+        //            currentRadius--;
+        //            var x = coords.X;
+        //            var y = coords.Y;
+        //            if (direction == Direction.Right)
+        //            {
+        //                x++;
+        //            }
+        //            else if (direction == Direction.Up)
+        //            {
+        //                y--;
+        //            }
+        //            else if (direction == Direction.Left)
+        //            {
+        //                x--;
+        //            }
+        //            else if (direction == Direction.Down)
+        //            {
+        //                y++;
+        //            }
+        //            coords = new Point(x, y);
 
-                if (direction == Direction.Right)
-                {
-                    x++;
-                }
-                else if (direction == Direction.Up)
-                {
-                    y--;
-                }
-                else if (direction == Direction.Left)
-                {
-                    x--;
-                }
-                else if (direction == Direction.Down)
-                {
-                    y++;
-                }
+        //            if (currentRadius == 1)
+        //            {
+        //                if (direction == Direction.Right)
+        //                {
+        //                    direction = Direction.Up;
+        //                }
+        //                else if (direction == Direction.Up)
+        //                {
+        //                    direction = Direction.Left;
+        //                }
+        //                else if (direction == Direction.Left)
+        //                {
+        //                    direction = Direction.Down;
+        //                }
+        //                else if (direction == Direction.Down)
+        //                {
+        //                    direction = Direction.Right;
+        //                }
 
-                if (currentRadius == 1)
-                {
-                    if (direction == Direction.Right)
-                    {
-                        direction = Direction.Up;
-                    }
-                    else if (direction == Direction.Up)
-                    {
-                        direction = Direction.Left;
-                    }
-                    else if (direction == Direction.Left)
-                    {
-                        direction = Direction.Down;
-                    }
-                    else if (direction == Direction.Down)
-                    {
-                        direction = Direction.Right;
-                    }
+        //                if (canIncrementRadius)
+        //                {
+        //                    totalRadius++;
+        //                }
 
-                    if (canIncrementRadius)
-                    {
-                        totalRadius++;
-                    }
-
-                    currentRadius = totalRadius;
-                    canIncrementRadius = !canIncrementRadius;
-                }
-            }
-        }
+        //                currentRadius = totalRadius;
+        //                canIncrementRadius = !canIncrementRadius;
+        //            }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this.semaphore.Release();
+        //    }
+        //}
 
         private void DrawPrimesRectPattern(PaintEventArgs e, CancellationToken token)
         {
-            for (var i = 0; i < this.primes.Length; i++)
+            for (var i = 0; i < Primes.primes.Length; i++)
             {
-                if (this.primes[i])
+                if (Primes.primes[i])
                 {
                     var x = i % e.ClipRectangle.Width;
                     var y = i / e.ClipRectangle.Width;
-                    this.graphics.FillRectangle(this.blackBrush, x, y, 1, 1);
+                    this.scene.DrawRect(x, y);
 
                     if (y > e.ClipRectangle.Height)
                     {
@@ -201,54 +246,7 @@ namespace Primes
             }
         }
 
-        private void GetPrimesViaEratosthenesSieve(PaintEventArgs e)
-        {
-            if (this.arePrimesCounted.HasValue)
-            {
-                return;
-            }
-            this.arePrimesCounted = false;
-            // From pseudocode https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes
-            // Credits to Eratosthenes
 
-            //var limit = BigInteger.Pow(Int64.MaxValue, 3);
-            //var limit = (int.MaxValue / 2) - 1;
-            var limit = ScreenWidth * ScreenHeight; //Good for tests on my PC
-            Debug.WriteLine($"Prime numbers finding limit: {limit}");
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            this.primes = new bool[limit];
-            for (var i = 0; i < limit; i++)
-            {
-                this.primes[i] = true;
-            }
-            this.primes[0] = false;
-            this.primes[1] = false;
-            Debug.WriteLine($"first step took: {stopwatch.ElapsedMilliseconds}ms");
-
-            for (var i = 2; i < Math.Sqrt(limit); i++)
-            {
-                if (this.primes[i])
-                {
-                    for (var j = 2 * i; j < limit; j += i)
-                    {
-                        this.primes[j] = false;
-                    }
-                }
-            }
-            Debug.WriteLine($"second step took: {stopwatch.ElapsedMilliseconds}ms");
-            this.arePrimesCounted = true;
-        }
-
-        private enum Direction
-        {
-            Left = 0,
-            Up,
-            Right,
-            Down
-        }
 
         private void DrawCoordinates(PaintEventArgs e)
         {

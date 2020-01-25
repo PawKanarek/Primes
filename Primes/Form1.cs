@@ -102,7 +102,7 @@ namespace Primes
                     return;
                 }
 
-                IPerformance performance = new Performance();
+                var performance = new Performance();
                 //this.DrawPrimesRectPattern(e, token);
                 this.DrawPrimesUlam(token);
                 performance.Stop();

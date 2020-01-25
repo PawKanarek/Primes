@@ -1,8 +1,9 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Primes
@@ -13,27 +14,58 @@ namespace Primes
         private const int ScreenHeight = 2560;
         private const int framerateMs = 17;
 
-        private Graphics graphics;
-        private readonly Brush blackBrush;
+        private readonly Preferences preferences = new Preferences();
         private bool[] primes;
         private bool? arePrimesCounted = null;
         private CancellationTokenSource cancellationTokenSource;
         private bool isResizing;
-        private bool isDrawing;
+        private PictureBox picturebox;
+        private SKImageInfo imageInfo;
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         public Form1()
         {
             this.InitializeComponent();
-            this.ResizeRedraw = true;
-            this.blackBrush = Brushes.Black;
-            this.Paint += this.Form1_Paint;
             this.ResizeBegin += this.Form1_ResizeBegin;
             this.ResizeEnd += this.Form1_ResizeEnd;
             this.Resize += this.Form1_Resize;
             this.MouseMove += this.Form1_MouseMove;
-            this.graphics = this.CreateGraphics();
-            //this.graphics.BeginContainer(this.graphics.VisibleClipBounds, newRect, GraphicsUnit.Pixel);
+            this.FormClosing += this.Form1_FormClosing;
+            this.Load += this.Form1_Load;
+            this.RestoreLastWindowPosition();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            this.RestoreLastWindowPosition();
+            this.picturebox = new PictureBox();
+            this.picturebox.Size = new Size(this.Width, this.Height);
+            this.picturebox.Name = "CanvasPictureBox";
+            this.imageInfo = new SKImageInfo(this.Width, this.Height);
+            this.GetPrimesViaEratosthenesSieve();
+            this.cancellationTokenSource?.Cancel();
+            this.cancellationTokenSource = new CancellationTokenSource();
+            this.DrawPrimes(this.cancellationTokenSource.Token);
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.preferences.Model.WindowHeight = this.Height;
+            this.preferences.Model.WindowWidth = this.Width;
+            this.preferences.Model.WindowTop = this.Top;
+            this.preferences.Model.WindowLeft = this.Left;
+            this.preferences.Model.WindowState = this.WindowState;
+
+            this.preferences.Save();
+        }
+
+        private void RestoreLastWindowPosition()
+        {
+            this.Height = this.preferences.Model.WindowHeight;
+            this.Width = this.preferences.Model.WindowWidth;
+            this.Top = this.preferences.Model.WindowTop;
+            this.Left = this.preferences.Model.WindowLeft;
+            this.WindowState = this.preferences.Model.WindowState;
         }
 
         private void Form1_MouseMove(object sender, MouseEventArgs e)
@@ -47,8 +79,6 @@ namespace Primes
         private void Form1_Resize(object sender, EventArgs e)
         {
             this.cancellationTokenSource?.Cancel();
-            this.graphics.Dispose();
-            this.graphics = this.CreateGraphics();
         }
 
         private void Form1_ResizeEnd(object sender, EventArgs e)
@@ -62,34 +92,21 @@ namespace Primes
             this.cancellationTokenSource?.Cancel();
         }
 
-        private async void Form1_Paint(object sender, PaintEventArgs e)
-        {
-            this.cancellationTokenSource?.Cancel();
-            this.cancellationTokenSource = new CancellationTokenSource();
-            this.DrawCoordinates(e);
-            this.GetPrimesViaEratosthenesSieve(e);
-            await Task.Run(() => this.DrawPrimes(e, this.cancellationTokenSource.Token)); ;
-        }
-
-        private void DrawPrimes(PaintEventArgs e, CancellationToken token)
+        private void DrawPrimes(CancellationToken token)
         {
             try
             {
                 token.ThrowIfCancellationRequested();
-                if (!CanDraw(e))
+                if (!CanDraw())
                 {
                     return;
                 }
 
-                var stopwatch = new Stopwatch();
-                stopwatch.Start();
-
-                this.isDrawing = true;
+                IPerformance performance = new Performance();
                 //this.DrawPrimesRectPattern(e, token);
-                this.DrawPrimesUlam(e, token);
-                this.isDrawing = false;
-                stopwatch.Stop();
-                Debug.WriteLine($"Drawing took: {stopwatch.ElapsedMilliseconds}");
+                this.DrawPrimesUlam(token);
+                performance.Stop();
+
             }
             catch (OperationCanceledException)
             {
@@ -99,16 +116,16 @@ namespace Primes
             {
             }
 
-            bool CanDraw(PaintEventArgs eventArgs)
+            bool CanDraw()
             {
-                return this.arePrimesCounted.HasValue && this.arePrimesCounted.Value && eventArgs.ClipRectangle.Width > 0 && e.ClipRectangle.Height > 0;
+                return this.arePrimesCounted.HasValue && this.arePrimesCounted.Value && this.Width > 0 && this.Height > 0;
             }
         }
 
-        private void DrawPrimesUlam(PaintEventArgs e, CancellationToken token)
+        private void DrawPrimesUlam(CancellationToken token)
         {
-            var startX = e.ClipRectangle.Width / 2;
-            var startY = e.ClipRectangle.Height / 2;
+            var startX = this.Width / 2;
+            var startY = this.Height / 2;
 
             var x = startX;
             var y = startY;
@@ -117,17 +134,22 @@ namespace Primes
             var canIncrementRadius = false;
             Direction direction = Direction.Right;
 
-            // go in lenght of *curreentRadius* in *direction*, move 1 pixel at time *x++ || y-- || x-- || y++*
-            // change *driection* and reset *currentRadius* if current *currentRadius == 1* (reched corner) and every two times *if canIncrementRadius* increment *totalRadius++*
+            using var surface = SKSurface.Create(this.imageInfo);
+            var canvas = surface.Canvas;
+            canvas.Clear(SKColors.Red);
+
+            // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
+            // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
             for (var i = 1; i < this.primes.Length; i++)
             {
                 token.ThrowIfCancellationRequested();
 
                 if (this.primes[i])
                 {
-                    this.graphics.FillRectangle(this.blackBrush, x, y, 1, 1);
+                    var color = new SKColor(0, 120, 243);
+                    canvas.DrawPoint(x, y, color);
 
-                    if (y > e.ClipRectangle.Height && x > e.ClipRectangle.Width)
+                    if (y > this.Height && x > this.Width)
                     {
                         break;
                     }
@@ -180,28 +202,18 @@ namespace Primes
                     canIncrementRadius = !canIncrementRadius;
                 }
             }
+
+            using SKImage image = surface.Snapshot();
+            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
+            using var memoryStream = new MemoryStream(data.ToArray());
+            var bitmap = new Bitmap(memoryStream, false);
+
+            this.picturebox.Image = bitmap;
+
+            this.Controls.Add(this.picturebox);
         }
 
-        private void DrawPrimesRectPattern(PaintEventArgs e, CancellationToken token)
-        {
-            for (var i = 0; i < this.primes.Length; i++)
-            {
-                if (this.primes[i])
-                {
-                    var x = i % e.ClipRectangle.Width;
-                    var y = i / e.ClipRectangle.Width;
-                    this.graphics.FillRectangle(this.blackBrush, x, y, 1, 1);
-
-                    if (y > e.ClipRectangle.Height)
-                    {
-                        break;
-                    }
-                    token.ThrowIfCancellationRequested();
-                }
-            }
-        }
-
-        private void GetPrimesViaEratosthenesSieve(PaintEventArgs e)
+        private void GetPrimesViaEratosthenesSieve()
         {
             if (this.arePrimesCounted.HasValue)
             {
@@ -214,11 +226,8 @@ namespace Primes
             //var limit = BigInteger.Pow(Int64.MaxValue, 3);
             //var limit = (int.MaxValue / 2) - 1;
             var limit = ScreenWidth * ScreenHeight; //Good for tests on my PC
-            Debug.WriteLine($"Prime numbers finding limit: {limit}");
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
+            var performance = new Performance();
             this.primes = new bool[limit];
             for (var i = 0; i < limit; i++)
             {
@@ -226,8 +235,7 @@ namespace Primes
             }
             this.primes[0] = false;
             this.primes[1] = false;
-            Debug.WriteLine($"first step took: {stopwatch.ElapsedMilliseconds}ms");
-
+            performance.Step();
             for (var i = 2; i < Math.Sqrt(limit); i++)
             {
                 if (this.primes[i])
@@ -238,7 +246,7 @@ namespace Primes
                     }
                 }
             }
-            Debug.WriteLine($"second step took: {stopwatch.ElapsedMilliseconds}ms");
+            performance.Stop();
             this.arePrimesCounted = true;
         }
 
@@ -248,21 +256,6 @@ namespace Primes
             Up,
             Right,
             Down
-        }
-
-        private void DrawCoordinates(PaintEventArgs e)
-        {
-            //this.graphics.FillRectangle(this.blackBrush,
-            //    x: e.ClipRectangle.Width / 2,
-            //    y: 0,
-            //    width: 1,
-            //    height: e.ClipRectangle.Height);
-
-            //this.graphics.FillRectangle(this.blackBrush,
-            //    x: 0,
-            //    y: e.ClipRectangle.Height / 2,
-            //    width: e.ClipRectangle.Width,
-            //    height: 1);
         }
     }
 }

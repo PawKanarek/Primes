@@ -1,29 +1,34 @@
+using System;
 using System.Diagnostics;
 
 namespace Primes
 {
     public class Performance
     {
-        private readonly Stopwatch stopwatch;
+        public readonly Stopwatch stopwatch;
+        private string message;
         private int stepNumber;
 
-        public Performance()
+        public Performance(string message = null)
         {
+            this.message = message;
             this.stopwatch = new Stopwatch();
             this.stopwatch.Start();
             Helpers.Print(this, this.StepStepDesc, 2);
         }
-        private string StepStepDesc => $"Step: {this.stepNumber++}. time: {this.stopwatch.ElapsedMilliseconds}ms.";
-        private string StoptDesc => $"Stop: {this.stepNumber++}. time: {this.stopwatch.ElapsedMilliseconds}ms.";
+        private string StepStepDesc => $"Step: {this.stepNumber++}. {this.message} time: {this.stopwatch.ElapsedMilliseconds}ms.";
+        private string StoptDesc => $"Stop: {this.stepNumber++}. {this.message} time: {this.stopwatch.ElapsedMilliseconds}ms.";
 
-        public void Stop()
+        public void Stop(string newMessage = null)
         {
+            this.message = newMessage;
             Helpers.Print(this, this.StoptDesc, 2);
             this.stopwatch.Stop();
         }
 
-        public void Step()
+        public void Step(string newMessage = null)
         {
+            this.message = newMessage;
             Helpers.Print(this, this.StepStepDesc, 2);
         }
     }

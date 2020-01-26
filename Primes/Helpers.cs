@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using System.Threading;
 
 namespace Primes
 {
     public static class Helpers
     {
-        public static void Print(object sender, string message, int stackFrame = 1)
+        public static void Print(object sender, string message=null, int stackFrame = 1)
         {
             System.Reflection.MethodBase parentMethod = new StackFrame(stackFrame)?.GetMethod();
             var prefix = string.Empty;
@@ -14,7 +15,7 @@ namespace Primes
                 prefix = $"{parentObject}.{parentMethod.Name} ";
             }
 
-            Debug.WriteLine($"{sender.GetHashCode(),-12} {prefix}{message}");
+            Debug.WriteLine($"T:{Thread.CurrentThread.ManagedThreadId,-3}{sender.GetHashCode(),-12} {prefix}{message}");
         }
     }
 }

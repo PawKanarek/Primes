@@ -1,5 +1,7 @@
+using Microsoft.Graphics.Canvas.UI.Xaml;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -10,16 +12,19 @@ namespace Primes
 {
     public class Skia
     {
-        public PictureBox picturebox;
+        public CanvasControl picturebox;
         private SKImageInfo imageInfo;
         private SKRectI VisibleArea = SKRectI.Empty;
         private SKPointI startTracingPoint = SKPointI.Empty;
         private SKColor color = new SKColor(0, 120, 243);
         private bool startTracing;
+        //private Dictionary<int, Point> primesCoordinates = new Dictionary<int, Point>();;
+        private List<SKPointI> primesCoordinates = new List<SKPointI>();
+        private SKSurface surface;
 
         public Skia(int Width, int Height)
         {
-            this.picturebox = new PictureBox();
+            this.picturebox = new CanvasControl();
             this.picturebox.Size = new Size(Width, Height);
             this.picturebox.Name = "CanvasPictureBox";
             this.picturebox.MouseMove += this.Picturebox_MouseMove;
@@ -33,8 +38,7 @@ namespace Primes
         {
             if (this.startTracing)
             {
-                this.VisibleArea.Location = new SKPointI(this.startTracingPoint.X - e.X, this.startTracingPoint.Y - e.Y);
-                this.TryDraw();
+                this.Trasnlate(e);
                 Helpers.Print(this, $"Location {this.VisibleArea}");
             }
         }
@@ -51,6 +55,55 @@ namespace Primes
             this.startTracing = false;
             Helpers.Print(this);
         }
+        private void Trasnlate(MouseEventArgs e)
+        {
+            this.VisibleArea.Location = new SKPointI(this.startTracingPoint.X - e.X, this.startTracingPoint.Y - e.Y);
+            var performance = new Performance();
+            
+            performance.Step($"Start Drawing, iterations: {this.primesCoordinates.Count} Area: {this.VisibleArea.Width * this.VisibleArea.Height}");
+            this.surface.Canvas.Clear(SKColors.Red.WithAlpha(10));
+            foreach (var point in this.primesCoordinates)
+            {
+                var translatedPoint = point + this.VisibleArea.Location;
+                this.surface.Canvas.DrawPoint(translatedPoint, this.color);
+            }
+            performance.Step("stop Drawing");
+            using SKImage image = surface.Snapshot();
+            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
+            performance.Step();
+
+            using var memoryStream = new MemoryStream(data.ToArray());
+            performance.Step();
+
+            var bitmap = new Bitmap(memoryStream, false);
+            this.picturebox.Image?.Dispose();
+            this.picturebox.Image = bitmap;
+            performance.Stop();
+        }
+
+        private void DrawUlamSpiral()
+        {
+            var performance = new Performance();
+            this.surface = SKSurface.Create(this.imageInfo);
+            this.surface.Canvas.Clear(SKColors.Red.WithAlpha(10));
+
+            foreach (var point in this.primesCoordinates)
+            {
+                this.surface.Canvas.DrawPoint(point, this.color);
+            }
+
+            using SKImage image = surface.Snapshot();
+            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
+            performance.Step();
+
+            using var memoryStream = new MemoryStream(data.ToArray());
+            performance.Step();
+
+            var bitmap = new Bitmap(memoryStream, false);
+            this.picturebox.Image?.Dispose();
+            this.picturebox.Image = bitmap;
+            performance.Stop();
+        }
 
         public bool TryDraw(CancellationToken? token = null)
         {
@@ -62,11 +115,12 @@ namespace Primes
                     || this.VisibleArea.Width <= 0 
                     || this.VisibleArea.Height <= 0)
                 {
-                    return false;
+                    return completed;
                 }
 
                 var performance = new Performance();
-                this.DrawPrimesUlam(token);
+                this.GetUlamSpiralCoordinates();
+                DrawUlamSpiral();
                 performance.Stop();
                 completed = true;
             }
@@ -78,40 +132,31 @@ namespace Primes
             return completed;
         }
 
-        private void DrawPrimesUlam(CancellationToken? token = null)
-        {
-            var startX = this.VisibleArea.Width / 2 - this.VisibleArea.Left;
-            var startY = this.VisibleArea.Height / 2 - this.VisibleArea.Top;
+        private void GetUlamSpiralCoordinates()
+        { 
+            if (this.primesCoordinates.Count > 0)
+            {
+                return;
+            }
 
-            var performance = new Performance(this.VisibleArea.ToString());
-
-            var x = startX;
-            var y = startY;
+            var x = this.VisibleArea.Width / 2 - this.VisibleArea.Left;
+            var y = this.VisibleArea.Height / 2 - this.VisibleArea.Top;
             var totalRadius = 2;
             var currentRadius = totalRadius;
             var canIncrementRadius = false;
             Direction direction = Direction.Right;
 
-            var imageInfo2 = new SKImageInfo(this.imageInfo.Width, this.imageInfo.Height);
-            using var surface = SKSurface.Create(imageInfo2);
-            SKCanvas canvas = surface.Canvas;
-            canvas.Clear(SKColors.Red.WithAlpha(10));
-            performance.Step($"Before Drawing (x0,y0)=({x},{y})");
+            var performance = new Performance(this.VisibleArea.ToString());
+           
+            performance.Step($"Getting coords, (x0,y0)=({x},{y})");
             var i = 1;
             // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
             // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
             for (i = 1; i < Primes.primes.Length; i++)
             {
-                token?.ThrowIfCancellationRequested();
-             
-                if (performance.stopwatch.ElapsedMilliseconds > 25 && this.picturebox.Image != null)
-                {
-                    break;
-                }
-                
                 if (Primes.primes[i])
                 {
-                    canvas.DrawPoint(x, y, this.color);
+                    this.primesCoordinates.Add(new SKPointI(x, y));
                     if (y > this.VisibleArea.Height && x > this.VisibleArea.Width)
                     {
                         break;
@@ -164,18 +209,7 @@ namespace Primes
                     canIncrementRadius = !canIncrementRadius;
                 }
             }
-            performance.Step($"After Drawing  (xn,yn)=({x},{y}) iterationsCount: {i} ");
-            using SKImage image = surface.Snapshot();
-            using SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
-            performance.Step();
-
-            using var memoryStream = new MemoryStream(data.ToArray());
-            performance.Step();
-
-            var bitmap = new Bitmap(memoryStream, false);
-            this.picturebox.Image?.Dispose();
-            this.picturebox.Image = bitmap;
-            performance.Stop();
+            performance.Stop($"Getting coords done (xn,yn)=({x},{y}) iterationsCount: {i} ");
         }
 
         private enum Direction

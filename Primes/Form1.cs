@@ -20,7 +20,6 @@ namespace Primes
         {
             this.RestoreLastWindowPosition();
             this.skia = new Skia(this.Width, this.Height);
-            this.Controls.Add(this.skia.picturebox);
             Primes.GetPrimesViaEratosthenesSieve();
             Helpers.Print(this, $"Form1_Load");
             this.skia.TryDraw();

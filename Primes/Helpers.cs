@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading;
 
@@ -5,7 +6,7 @@ namespace Primes
 {
     public static class Helpers
     {
-        public static void Print(object sender, string message=null, int stackFrame = 1)
+        public static void Print(object sender, string message = null, int stackFrame = 1)
         {
             System.Reflection.MethodBase parentMethod = new StackFrame(stackFrame)?.GetMethod();
             var prefix = string.Empty;
@@ -15,7 +16,7 @@ namespace Primes
                 prefix = $"{parentObject}.{parentMethod.Name} ";
             }
 
-            Debug.WriteLine($"T:{Thread.CurrentThread.ManagedThreadId,-3}{sender.GetHashCode(),-12} {prefix}{message}");
+            Debug.WriteLine($"{DateTimeOffset.Now.ToString("HH:mm:ss.FFF"),-12} T:{Thread.CurrentThread.ManagedThreadId,-3}{sender.GetHashCode(),-12} {prefix}{message}");
         }
     }
 }

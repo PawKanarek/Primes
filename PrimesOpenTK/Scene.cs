@@ -30,7 +30,7 @@ namespace PrimesOpenTK
            -.5f,  .5f, .0f,  // Top-Left Vortex
         };
 
-        private readonly uint[] indices = {  // note that we start from 0!
+        private readonly uint[] indices = { 
             0, 1, 3,   // first triangle
             1, 2, 3    // second triangle
         };

@@ -1,10 +1,8 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL4;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PrimesOpenTK
 {
@@ -53,14 +51,28 @@ namespace PrimesOpenTK
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
         }
+
         public void Use()
         {
             GL.UseProgram(this.handle);
         }
+        public void SetInt(string name, int value)
+        {
+            var location = GL.GetUniformLocation(this.handle, name);
+
+            GL.Uniform1(location, value);
+        }
+
+        public void SetMatrix4(string name, Matrix4 data)
+        {
+            var location = GL.GetUniformLocation(this.handle, name);
+
+            GL.UniformMatrix4(location, true, ref data);
+        }
 
         public int GetAttribLocation(string attribName)
         {
-            return GL.GetAttribLocation(handle, attribName);
+            return GL.GetAttribLocation(this.handle, attribName);
         }
 
         private void PrintInfo(string message)

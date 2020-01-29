@@ -10,7 +10,7 @@ namespace PrimesOpenTK
     {
         static void Main(string[] args)
         {
-            using (var game = new Scene(800, 600, "Primes"))
+            using (var game = new Scene(800, 800, "Primes"))
             {
                 game.Run(60.0);
             }

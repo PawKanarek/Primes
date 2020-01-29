@@ -3,10 +3,6 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PrimesOpenTK
 {
@@ -15,25 +11,35 @@ namespace PrimesOpenTK
     /// </summary>
     public class Scene : GameWindow
     {
-
+        private Texture texture0;
+        private Texture texture1;
         private Shader shader;
         private int vertexBufferObject;
         private int vertexArrayObject;
         private int elementBufferObject;
 
-        // x, y, z
         private readonly float[] verticles =
         {
-            .5f,  .5f, .0f,  // Top-Right Vortex
-            .5f, -.5f, .0f,  // Bottom-Right Vortex
-           -.5f, -.5f, .0f,  // Bottom-Left Vortex
-           -.5f,  .5f, .0f,  // Top-Left Vortex
+            // x, y, z          Texture coordinates
+            -0.1f,  0.1f, 0.0f, 1.0f, 1.0f, // Left-Top Vortex
+             0.1f,  0.1f, 0.0f, 1.0f, 0.0f, // Right-Top Vortex
+             0.1f, -0.1f, 0.0f, 0.0f, 0.0f, // Right-Bottom Vortex
+            -0.1f, -0.1f, 0.0f, 0.0f, 1.0f // Left-Bottom Vortex
         };
 
-        private readonly uint[] indices = { 
+        //private readonly float[] verticles2 =
+        //{
+        //     .1f,  .1f, .0f, // Left-Top Vortex
+        //     .2f,  .1f, .0f, // Right-Top Vortex
+        //     .2f, -.1f, .0f, // Right-Bottom Vortex
+        //    -.1f, -.1f, .0f, // Left-Bottom Vort
+        //};
+
+        private readonly uint[] indices = {
             0, 1, 3,   // first triangle
             1, 2, 3    // second triangle
         };
+
 
         public Scene(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -47,6 +53,7 @@ namespace PrimesOpenTK
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, this.verticles.Length * sizeof(float), this.verticles, BufferUsageHint.StaticDraw);
 
+
             this.elementBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, this.indices.Length * sizeof(uint), this.indices, BufferUsageHint.StaticDraw);
@@ -54,14 +61,28 @@ namespace PrimesOpenTK
             this.shader = new Shader("shader.vert", "shader.frag");
             this.shader.Use();
 
+            this.texture0 = new Texture("Resources/container.png");
+            this.texture0.Use();
+
+            this.texture1 = new Texture("Resources/awesomeface.png");
+            this.texture1.Use();
+
+            this.shader.SetInt("texture0", 0);
+            this.shader.SetInt("texture1", 1);
+
             this.vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(this.vertexArrayObject);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.vertexArrayObject);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
 
-            GL.VertexAttribPointer(this.shader.GetAttribLocation("aPosition"), 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
+            var vertexLocation = this.shader.GetAttribLocation("aPosition");
+            GL.EnableVertexAttribArray(vertexLocation);
+            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+
+            var texCoordLocation = this.shader.GetAttribLocation("aTexCoord");
+            GL.EnableVertexAttribArray(texCoordLocation);
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
             base.OnLoad(e);
         }
@@ -70,10 +91,23 @@ namespace PrimesOpenTK
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            var transform = Matrix4.Identity;
+            
+            transform *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(20f));
+
+            transform *= Matrix4.CreateScale(1.1f);
+
+            transform *= Matrix4.CreateTranslation(0.1f, 0.1f, 0.0f);
+
+
+            texture0.Use(TextureUnit.Texture0);
+            texture1.Use(TextureUnit.Texture1);
             this.shader.Use();
+            this.shader.SetMatrix4("transform", transform);
+
             GL.BindVertexArray(this.vertexArrayObject);
 
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, this.indices.Length, DrawElementsType.UnsignedInt, 0);
             this.Context.SwapBuffers();
 
             base.OnRenderFrame(e);
@@ -94,7 +128,9 @@ namespace PrimesOpenTK
 
             GL.DeleteBuffer(this.vertexBufferObject);
             GL.DeleteVertexArray(this.vertexArrayObject);
+
             this.shader.Dispose();
+            this.texture0.Dispose();
 
             base.OnUnload(e);
         }

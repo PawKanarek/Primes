@@ -120,7 +120,7 @@ namespace PrimesOpenTK
 
         private void Cleanup()
         {
-            GL.DeleteProgram(this.Handle);
+            GL.DeleteTexture(this.Handle);
         }
     }
 }

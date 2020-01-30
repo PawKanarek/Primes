@@ -11,6 +11,9 @@ namespace PrimesOpenTK
     /// </summary>
     public class Scene : GameWindow
     {
+        private double _time;
+        private Matrix4 _view;
+        private Matrix4 _projection;
         private Texture texture0;
         private Texture texture1;
         private Shader shader;
@@ -18,14 +21,58 @@ namespace PrimesOpenTK
         private int vertexArrayObject;
         private int elementBufferObject;
 
-        private readonly float[] verticles =
-        {
-            // x, y, z          Texture coordinates
-            -0.1f,  0.1f, 0.0f, 1.0f, 1.0f, // Left-Top Vortex
-             0.1f,  0.1f, 0.0f, 1.0f, 0.0f, // Right-Top Vortex
-             0.1f, -0.1f, 0.0f, 0.0f, 0.0f, // Right-Bottom Vortex
-            -0.1f, -0.1f, 0.0f, 0.0f, 1.0f // Left-Bottom Vortex
+        float[] verticles = {
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
+
+        //private readonly float[] verticles =
+        //{
+        //    // x, y, z          Texture coordinates
+        //    -0.1f,  0.1f, 0.0f, 1.0f, 1.0f, // Left-Top Vortex
+        //     0.1f,  0.1f, 0.0f, 1.0f, 0.0f, // Right-Top Vortex
+        //     0.1f, -0.1f, 0.0f, 0.0f, 0.0f, // Right-Bottom Vortex
+        //    -0.1f, -0.1f, 0.0f, 0.0f, 1.0f // Left-Bottom Vortex
+        //};
 
         //private readonly float[] verticles2 =
         //{
@@ -48,15 +95,15 @@ namespace PrimesOpenTK
         protected override void OnLoad(EventArgs e)
         {
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
+            GL.Enable(EnableCap.DepthTest);
             this.vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, this.verticles.Length * sizeof(float), this.verticles, BufferUsageHint.StaticDraw);
 
-
-            this.elementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, this.indices.Length * sizeof(uint), this.indices, BufferUsageHint.StaticDraw);
+            // uncomment when using 2 d an indices
+            //this.elementBufferObject = GL.GenBuffer();
+            //GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
+            //GL.BufferData(BufferTarget.ElementArrayBuffer, this.indices.Length * sizeof(uint), this.indices, BufferUsageHint.StaticDraw);
 
             this.shader = new Shader("shader.vert", "shader.frag");
             this.shader.Use();
@@ -74,7 +121,8 @@ namespace PrimesOpenTK
             GL.BindVertexArray(this.vertexArrayObject);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.vertexArrayObject);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
+            // uncomment when using 2 d an indices
+            //GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
 
             var vertexLocation = this.shader.GetAttribLocation("aPosition");
             GL.EnableVertexAttribArray(vertexLocation);
@@ -84,30 +132,35 @@ namespace PrimesOpenTK
             GL.EnableVertexAttribArray(texCoordLocation);
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
 
+            _view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
+            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100.0f);
+
+
             base.OnLoad(e);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            var transform = Matrix4.Identity;
-            
-            transform *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(20f));
+            _time += 160 * e.Time;
 
-            transform *= Matrix4.CreateScale(1.1f);
 
-            transform *= Matrix4.CreateTranslation(0.1f, 0.1f, 0.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 
             texture0.Use(TextureUnit.Texture0);
             texture1.Use(TextureUnit.Texture1);
             this.shader.Use();
-            this.shader.SetMatrix4("transform", transform);
+
+            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time));
+
+            shader.SetMatrix4("model", model);
+            shader.SetMatrix4("view", _view);
+            shader.SetMatrix4("projection", _projection);
 
             GL.BindVertexArray(this.vertexArrayObject);
-
-            GL.DrawElements(PrimitiveType.Triangles, this.indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            //GL.DrawElements(PrimitiveType.Triangles, this.indices.Length, DrawElementsType.UnsignedInt, 0);
             this.Context.SwapBuffers();
 
             base.OnRenderFrame(e);
@@ -131,6 +184,7 @@ namespace PrimesOpenTK
 
             this.shader.Dispose();
             this.texture0.Dispose();
+            this.texture1.Dispose();
 
             base.OnUnload(e);
         }

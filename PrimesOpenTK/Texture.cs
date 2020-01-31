@@ -109,13 +109,16 @@ namespace PrimesOpenTK
                 return;
             }
 
-            this.Cleanup();
+            if (disposing)
+            {
+                this.Cleanup();
+            }
             this.disposed = true;
         }
 
         ~Texture()
         {
-            this.Cleanup();
+            this.Dispose(false);
         }
 
         private void Cleanup()

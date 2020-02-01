@@ -6,13 +6,14 @@ namespace PrimesOpenTK
 {
     public class Cube : IDisposable
     {
+        private readonly Vector3 VAO2pos = new Vector3(2f, 0, 0);
+        private readonly Vector3 VAO3pos = new Vector3(-2f, 0, 0);
+        private int vertexBufferObject;
+        private int vertexArrayObject;
         private Texture texture0;
         private Texture texture1;
         private Shader shader;
-        private int vertexBufferObject;
-        private int vertexArrayObject;
-        private readonly Vector3 VAO2pos = new Vector3(2f, 0, 0);
-
+      
         // x, y, z
         private static readonly float[] verticles = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, //1
@@ -60,20 +61,17 @@ namespace PrimesOpenTK
 
         public void CreateVao()
         {
-
             this.vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.vertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, verticles.Length * sizeof(float), verticles, BufferUsageHint.StaticDraw);
 
-            this.shader = new Shader("shader.vert", "shader.frag");
-            this.shader.Use();
-
             this.texture0 = new Texture("Resources/container.png");
             this.texture0.Use();
-
             this.texture1 = new Texture("Resources/awesomeface.png");
             this.texture1.Use();
 
+            this.shader = new Shader("shader.vert", "shader.frag");
+            this.shader.Use();
             this.shader.SetInt("texture0", 0);
             this.shader.SetInt("texture1", 1);
 
@@ -92,31 +90,30 @@ namespace PrimesOpenTK
 
         public void RenderVao(Camera camera, double time)
         {
+            this.shader.Use();
             this.texture0.Use(TextureUnit.Texture0);
             this.texture1.Use(TextureUnit.Texture1);
-            this.shader.Use();
 
             Matrix4 model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time));
-
             this.shader.SetMatrix4("model", model);
             this.shader.SetMatrix4("view", camera.GetViewMatrix());
             this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-
             GL.BindVertexArray(this.vertexArrayObject);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
 
-            this.shader.Use();
-
             Matrix4 model2 = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time)) * Matrix4.CreateTranslation(this.VAO2pos);
-
             this.shader.SetMatrix4("model", model2);
             this.shader.SetMatrix4("view", camera.GetViewMatrix());
             this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-
             GL.BindVertexArray(this.vertexArrayObject);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
 
-            this.shader.Use();
+            Matrix4 model3= Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time)) * Matrix4.CreateTranslation(this.VAO3pos);
+            this.shader.SetMatrix4("model", model3);
+            this.shader.SetMatrix4("view", camera.GetViewMatrix());
+            this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+            GL.BindVertexArray(this.vertexArrayObject);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
         }
 
         private bool disposed = false;

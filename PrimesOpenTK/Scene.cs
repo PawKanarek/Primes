@@ -14,7 +14,6 @@ namespace PrimesOpenTK
         private Camera _camera;
         private bool _firstMove = true;
         private Vector2 _lastPos;
-
         private double _time;
         private readonly Cube cube = new Cube();
 

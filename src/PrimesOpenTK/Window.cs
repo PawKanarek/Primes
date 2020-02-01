@@ -10,7 +10,7 @@ namespace PrimesOpenTK
     /// <summary>
     /// Based on https://github.com/opentk/LearnOpenTK/blob/master/Chapter%201/2%20-%20Hello%20Triangle/Window.cs 
     /// </summary>
-    public class Scene : GameWindow
+    public class Window : GameWindow
     {
         private Camera _camera;
         private bool _firstMove = true;
@@ -19,7 +19,7 @@ namespace PrimesOpenTK
         private readonly Cube cube = new Cube();
         private List<Vector3> primesCoordinates = new List<Vector3>();
 
-        public Scene(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
+        public Window(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
         }
 

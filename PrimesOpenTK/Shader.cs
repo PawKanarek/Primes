@@ -102,11 +102,6 @@ namespace PrimesOpenTK
             this.disposed = true;
         }
 
-        ~Shader()
-        {
-            this.Cleanup();
-        }
-
         private void Cleanup()
         {
             GL.DeleteProgram(this.handle);

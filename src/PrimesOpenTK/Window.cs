@@ -48,10 +48,6 @@ namespace PrimesOpenTK
             this._camera.Fov -= e.DeltaPrecise;
             base.OnMouseWheel(e);
         }
-        protected override void OnMouseMove(MouseMoveEventArgs e)
-        {
-            base.OnMouseMove(e);
-        }
 
         protected override void OnResize(EventArgs e)
         {
@@ -65,8 +61,14 @@ namespace PrimesOpenTK
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindVertexArray(0);
             GL.UseProgram(0);
-
             this.cube.Dispose();
+
+            Preferences.Instance.Model.WindowLeft = this.X;
+            Preferences.Instance.Model.WindowTop = this.Y;
+            Preferences.Instance.Model.WindowWidth = this.Width;
+            Preferences.Instance.Model.WindowHeight = this.Height;
+            Preferences.Instance.Save();
+
             base.OnUnload(e);
         }
 
@@ -154,7 +156,7 @@ namespace PrimesOpenTK
             var canIncrementRadius = false;
             Direction direction = Direction.Right;
 
-            var i = 1;
+            int i;
             // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
             // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
             for (i = 1; i < Primes.primes.Length; i++)

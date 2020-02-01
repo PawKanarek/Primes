@@ -1,11 +1,14 @@
 ﻿namespace PrimesOpenTK
 {
-    internal class Program
+    internal static class Program
     {
         private static void Main(string[] args)
         {
-            using (var game = new Window(800, 800, "Primes"))
+            var model = Preferences.Instance.Model;
+            using (var game = new Window(model.WindowWidth, model.WindowHeight, "Primes"))
             {
+                game.X = model.WindowLeft;
+                game.Y = model.WindowTop;
                 game.Run(60.0);
             }
         }

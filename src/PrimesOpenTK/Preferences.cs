@@ -2,26 +2,20 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 
-namespace PrimesOpentTK
+namespace PrimesOpenTK
 {
     public class Preferences
     {
         public PreferencesModel Model { get; set; }
         private readonly FileManager<PreferencesModel> fileManager;
 
+        private static Preferences instance;
+        public static Preferences Instance => instance ?? (instance = new Preferences());
+
         public Preferences()
         {
             this.fileManager = new FileManager<PreferencesModel>("UserSettings.json");
-            this.Load();
-        }
-
-        private void Load()
-        {
-            this.Model = this.fileManager.Load();
-            if (this.Model == null)
-            {
-                this.Model = new PreferencesModel();
-            }
+            this.Model = this.fileManager.Load() ?? new PreferencesModel();
         }
 
         public void Save()
@@ -30,7 +24,6 @@ namespace PrimesOpentTK
             {
                 this.Model = new PreferencesModel();
             }
-
             this.fileManager.Save(this.Model);
         }
 

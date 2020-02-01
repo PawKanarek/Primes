@@ -83,8 +83,8 @@ namespace PrimesOpenTK
             }
         }
 
-
         private bool disposed = false;
+
         public void Dispose()
         {
             this.Dispose(true);

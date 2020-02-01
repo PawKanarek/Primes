@@ -1,4 +1,6 @@
-﻿namespace PrimesOpenTK
+﻿using System;
+
+namespace PrimesOpenTK
 {
     internal static class Program
     {

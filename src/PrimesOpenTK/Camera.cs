@@ -7,9 +7,6 @@ namespace PrimesOpenTK
     // It is important to note there are a few ways you could have set up this camera, for example
     // you could have also managed the player input inside the camera class, and a lot of the properties could have
     // been made into functions.
-
-    // TL;DR: This is just one of many ways in which we could have set up the camera
-    // Check out the web version if you don't know why we are doing a specific thing or want to know more about the code
     public class Camera
     {
         // Those vectors are directions pointing outwards from the camera to define how it rotated
@@ -87,7 +84,7 @@ namespace PrimesOpenTK
         // Get the projection matrix using the same method we have used up until this point
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, 100f);
+            return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, 1000f);
         }
 
         // This function is going to update the direction vertices using some of the math learned in the web tutorials

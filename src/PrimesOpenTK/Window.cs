@@ -12,10 +12,10 @@ namespace PrimesOpenTK
     /// </summary>
     public class Window : GameWindow
     {
-        private Camera _camera;
-        private bool _firstMove = true;
-        private Vector2 _lastPos;
-        private double _time;
+        private Camera camera;
+        private bool firstMove = true;
+        private Vector2 lastPos;
+        private double time;
         private readonly Cube cube = new Cube();
         private readonly List<Vector3> primesCoordinates = new List<Vector3>();
 
@@ -28,7 +28,7 @@ namespace PrimesOpenTK
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
             this.cube.CreateVao();
-            this._camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
+            this.camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
             Primes.GetPrimesViaEratosthenesSieve();
             this.GetUlamSpiralCoordinates();
             base.OnLoad(e);
@@ -36,23 +36,23 @@ namespace PrimesOpenTK
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            this._time += 160 * e.Time;
+            this.time += 160 * e.Time;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            this.cube.RenderVao(this._camera, this._time, this.primesCoordinates);
+            this.cube.RenderVao(this.camera, this.time, this.primesCoordinates);
             this.Context.SwapBuffers();
             base.OnRenderFrame(e);
         }
 
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            this._camera.Fov -= e.DeltaPrecise;
+            this.camera.Fov -= e.DeltaPrecise;
             base.OnMouseWheel(e);
         }
 
         protected override void OnResize(EventArgs e)
         {
             GL.Viewport(0, 0, this.Width, this.Height);
-            this._camera.AspectRatio = this.Width / (float)this.Height;
+            this.camera.AspectRatio = this.Width / (float)this.Height;
             base.OnResize(e);
         }
 
@@ -91,51 +91,51 @@ namespace PrimesOpenTK
 
             if (input.IsKeyDown(Key.W))
             {
-                this._camera.Position += this._camera.Front * cameraSpeed * (float)e.Time; // Forward 
+                this.camera.Position += this.camera.Front * cameraSpeed * (float)e.Time; // Forward 
             }
 
             if (input.IsKeyDown(Key.S))
             {
-                this._camera.Position -= this._camera.Front * cameraSpeed * (float)e.Time; // Backwards
+                this.camera.Position -= this.camera.Front * cameraSpeed * (float)e.Time; // Backwards
             }
 
             if (input.IsKeyDown(Key.A))
             {
-                this._camera.Position -= this._camera.Right * cameraSpeed * (float)e.Time; // Left
+                this.camera.Position -= this.camera.Right * cameraSpeed * (float)e.Time; // Left
             }
 
             if (input.IsKeyDown(Key.D))
             {
-                this._camera.Position += this._camera.Right * cameraSpeed * (float)e.Time; // Right
+                this.camera.Position += this.camera.Right * cameraSpeed * (float)e.Time; // Right
             }
 
             if (input.IsKeyDown(Key.Space))
             {
-                this._camera.Position += this._camera.Up * cameraSpeed * (float)e.Time; // Up 
+                this.camera.Position += this.camera.Up * cameraSpeed * (float)e.Time; // Up 
             }
 
             if (input.IsKeyDown(Key.LShift))
             {
-                this._camera.Position -= this._camera.Up * cameraSpeed * (float)e.Time; // Down
+                this.camera.Position -= this.camera.Up * cameraSpeed * (float)e.Time; // Down
             }
 
             MouseState mouse = Mouse.GetState();
 
             if (input.IsKeyDown(Key.ControlLeft))
             {
-                if (this._firstMove)
+                if (this.firstMove)
                 {
-                    this._lastPos = new Vector2(mouse.X, mouse.Y);
-                    this._firstMove = false;
+                    this.lastPos = new Vector2(mouse.X, mouse.Y);
+                    this.firstMove = false;
                 }
                 else
                 {
-                    var deltaX = mouse.X - this._lastPos.X;
-                    var deltaY = mouse.Y - this._lastPos.Y;
-                    this._lastPos = new Vector2(mouse.X, mouse.Y);
+                    var deltaX = mouse.X - this.lastPos.X;
+                    var deltaY = mouse.Y - this.lastPos.Y;
+                    this.lastPos = new Vector2(mouse.X, mouse.Y);
 
-                    this._camera.Yaw += deltaX * sensitivity;
-                    this._camera.Pitch -= deltaY * sensitivity;
+                    this.camera.Yaw += deltaX * sensitivity;
+                    this.camera.Pitch -= deltaY * sensitivity;
                 }
             }
 
@@ -149,13 +149,13 @@ namespace PrimesOpenTK
                 return;
             }
 
-            var x = this.Width / 2;
-            var y = this.Height / 2;
+            var x = 200;
+            var y = 200;
             var totalRadius = 2;
             var currentRadius = totalRadius;
             var canIncrementRadius = false;
             Direction direction = Direction.Right;
-
+            var performance = new Performance();
             int i;
             // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
             // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
@@ -164,7 +164,7 @@ namespace PrimesOpenTK
                 if (Primes.primes[i])
                 {
                     this.primesCoordinates.Add(new Vector3(x, y, 0));
-                    if (y > this.Height && x > this.Width)
+                    if (y > 400 && x > 400)
                     {
                         break;
                     }
@@ -216,6 +216,7 @@ namespace PrimesOpenTK
                     canIncrementRadius = !canIncrementRadius;
                 }
             }
+            performance.Stop($"Created {this.primesCoordinates.Count} coordinates for tiles in {i} iterations");
         }
 
         private enum Direction

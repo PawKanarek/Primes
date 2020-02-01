@@ -3,6 +3,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Input;
 using System;
+using System.Collections.Generic;
 
 namespace PrimesOpenTK
 {
@@ -16,6 +17,7 @@ namespace PrimesOpenTK
         private Vector2 _lastPos;
         private double _time;
         private readonly Cube cube = new Cube();
+        private List<Vector3> primesCoordinates = new List<Vector3>();
 
         public Scene(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -27,6 +29,8 @@ namespace PrimesOpenTK
             GL.Enable(EnableCap.DepthTest);
             this.cube.CreateVao();
             this._camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
+            Primes.GetPrimesViaEratosthenesSieve();
+            this.GetUlamSpiralCoordinates();
             base.OnLoad(e);
         }
 
@@ -34,7 +38,7 @@ namespace PrimesOpenTK
         {
             this._time += 160 * e.Time;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            this.cube.RenderVao(this._camera, this._time);
+            this.cube.RenderVao(this._camera, this._time, this.primesCoordinates);
             this.Context.SwapBuffers();
             base.OnRenderFrame(e);
         }
@@ -80,7 +84,7 @@ namespace PrimesOpenTK
                 this.Exit();
             }
 
-            const float cameraSpeed = 1.5f;
+            const float cameraSpeed = 150f;
             const float sensitivity = 0.2f;
 
             if (input.IsKeyDown(Key.W))
@@ -134,6 +138,90 @@ namespace PrimesOpenTK
             }
 
             base.OnUpdateFrame(e);
+        }
+
+        private void GetUlamSpiralCoordinates()
+        {
+            if (this.primesCoordinates.Count > 0)
+            {
+                return;
+            }
+
+            var x = this.Width / 2;
+            var y = this.Height / 2;
+            var totalRadius = 2;
+            var currentRadius = totalRadius;
+            var canIncrementRadius = false;
+            Direction direction = Direction.Right;
+
+            var i = 1;
+            // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
+            // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
+            for (i = 1; i < Primes.primes.Length; i++)
+            {
+                if (Primes.primes[i])
+                {
+                    this.primesCoordinates.Add(new Vector3(x,y,0));
+                    if (y > this.Height && x > this.Width)
+                    {
+                        break;
+                    }
+                }
+
+                currentRadius--;
+
+                if (direction == Direction.Right)
+                {
+                    x++;
+                }
+                else if (direction == Direction.Up)
+                {
+                    y--;
+                }
+                else if (direction == Direction.Left)
+                {
+                    x--;
+                }
+                else if (direction == Direction.Down)
+                {
+                    y++;
+                }
+
+                if (currentRadius == 1)
+                {
+                    if (direction == Direction.Right)
+                    {
+                        direction = Direction.Up;
+                    }
+                    else if (direction == Direction.Up)
+                    {
+                        direction = Direction.Left;
+                    }
+                    else if (direction == Direction.Left)
+                    {
+                        direction = Direction.Down;
+                    }
+                    else if (direction == Direction.Down)
+                    {
+                        direction = Direction.Right;
+                    }
+
+                    if (canIncrementRadius)
+                    {
+                        totalRadius++;
+                    }
+                    currentRadius = totalRadius;
+                    canIncrementRadius = !canIncrementRadius;
+                }
+            }
+        }
+
+        private enum Direction
+        {
+            Left = 0,
+            Up,
+            Right,
+            Down
         }
     }
 }

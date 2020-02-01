@@ -1,19 +1,19 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL4;
 using System;
+using System.Collections.Generic;
 
 namespace PrimesOpenTK
 {
     public class Cube : IDisposable
     {
         private readonly Vector3 VAO2pos = new Vector3(2f, 0, 0);
-        private readonly Vector3 VAO3pos = new Vector3(-2f, 0, 0);
         private int vertexBufferObject;
         private int vertexArrayObject;
         private Texture texture0;
         private Texture texture1;
         private Shader shader;
-      
+
         // x, y, z
         private static readonly float[] verticles = {
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, //1
@@ -59,6 +59,7 @@ namespace PrimesOpenTK
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
 
+
         public void CreateVao()
         {
             this.vertexBufferObject = GL.GenBuffer();
@@ -88,32 +89,22 @@ namespace PrimesOpenTK
             GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
         }
 
-        public void RenderVao(Camera camera, double time)
+
+        public void RenderVao(Camera camera, double time, List<Vector3> primesCoordinates)
         {
             this.shader.Use();
             this.texture0.Use(TextureUnit.Texture0);
             this.texture1.Use(TextureUnit.Texture1);
 
-            Matrix4 model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time));
-            this.shader.SetMatrix4("model", model);
-            this.shader.SetMatrix4("view", camera.GetViewMatrix());
-            this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            GL.BindVertexArray(this.vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
-
-            Matrix4 model2 = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time)) * Matrix4.CreateTranslation(this.VAO2pos);
-            this.shader.SetMatrix4("model", model2);
-            this.shader.SetMatrix4("view", camera.GetViewMatrix());
-            this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            GL.BindVertexArray(this.vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
-
-            Matrix4 model3= Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time)) * Matrix4.CreateTranslation(this.VAO3pos);
-            this.shader.SetMatrix4("model", model3);
-            this.shader.SetMatrix4("view", camera.GetViewMatrix());
-            this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
-            GL.BindVertexArray(this.vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            foreach (Vector3 item in primesCoordinates)
+            {
+                Matrix4 model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(time)) * Matrix4.CreateTranslation(item);
+                this.shader.SetMatrix4("model", model);
+                this.shader.SetMatrix4("view", camera.GetViewMatrix());
+                this.shader.SetMatrix4("projection", camera.GetProjectionMatrix());
+                GL.BindVertexArray(this.vertexArrayObject);
+                GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            }
         }
 
         private bool disposed = false;

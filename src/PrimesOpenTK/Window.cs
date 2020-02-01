@@ -17,7 +17,7 @@ namespace PrimesOpenTK
         private Vector2 _lastPos;
         private double _time;
         private readonly Cube cube = new Cube();
-        private List<Vector3> primesCoordinates = new List<Vector3>();
+        private readonly List<Vector3> primesCoordinates = new List<Vector3>();
 
         public Window(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -161,7 +161,7 @@ namespace PrimesOpenTK
             {
                 if (Primes.primes[i])
                 {
-                    this.primesCoordinates.Add(new Vector3(x,y,0));
+                    this.primesCoordinates.Add(new Vector3(x, y, 0));
                     if (y > this.Height && x > this.Width)
                     {
                         break;

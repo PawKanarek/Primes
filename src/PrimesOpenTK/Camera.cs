@@ -1,5 +1,5 @@
-﻿using System;
-using OpenTK;
+﻿using OpenTK;
+using System;
 
 namespace PrimesOpenTK
 {
@@ -13,21 +13,21 @@ namespace PrimesOpenTK
     public class Camera
     {
         // Those vectors are directions pointing outwards from the camera to define how it rotated
-        private Vector3 _front = -Vector3.UnitZ;
-        private Vector3 _up = Vector3.UnitY;
-        private Vector3 _right = Vector3.UnitX;
+        private Vector3 front = -Vector3.UnitZ;
+        private Vector3 up = Vector3.UnitY;
+        private Vector3 right = Vector3.UnitX;
 
         // Rotation around the X axis (radians)
-        private float _pitch;
+        private float pitch;
         // Rotation around the Y axis (radians)
-        private float _yaw = -MathHelper.PiOver2; // Without this you would be started rotated 90 degrees right
+        private float yaw = -MathHelper.PiOver2; // Without this you would be started rotated 90 degrees right
         // The field of view of the camera (radians)
-        private float _fov = MathHelper.PiOver2;
+        private float fov = MathHelper.PiOver2;
 
         public Camera(Vector3 position, float aspectRatio)
         {
-            Position = position;
-            AspectRatio = aspectRatio;
+            this.Position = position;
+            this.AspectRatio = aspectRatio;
         }
 
         // The position of the camera
@@ -35,33 +35,33 @@ namespace PrimesOpenTK
         // This is simply the aspect ratio of the viewport, used for the projection matrix
         public float AspectRatio { private get; set; }
 
-        public Vector3 Front => _front;
-        public Vector3 Up => _up;
-        public Vector3 Right => _right;
+        public Vector3 Front => this.front;
+        public Vector3 Up => this.up;
+        public Vector3 Right => this.right;
 
         // We convert from degrees to radians as soon as the property is set to improve performance
         public float Pitch
         {
-            get => MathHelper.RadiansToDegrees(_pitch);
+            get => MathHelper.RadiansToDegrees(this.pitch);
             set
             {
                 // We clamp the pitch value between -89 and 89 to prevent the camera from going upside down, and a bunch
                 // of weird "bugs" when you are using euler angles for rotation.
                 // If you want to read more about this you can try researching a topic called gimbal lock
                 var angle = MathHelper.Clamp(value, -89f, 89f);
-                _pitch = MathHelper.DegreesToRadians(angle);
-                UpdateVectors();
+                this.pitch = MathHelper.DegreesToRadians(angle);
+                this.UpdateVectors();
             }
         }
 
         // We convert from degrees to radians as soon as the property is set to improve performance
         public float Yaw
         {
-            get => MathHelper.RadiansToDegrees(_yaw);
+            get => MathHelper.RadiansToDegrees(this.yaw);
             set
             {
-                _yaw = MathHelper.DegreesToRadians(value);
-                UpdateVectors();
+                this.yaw = MathHelper.DegreesToRadians(value);
+                this.UpdateVectors();
             }
         }
 
@@ -70,42 +70,42 @@ namespace PrimesOpenTK
         // We convert from degrees to radians as soon as the property is set to improve performance
         public float Fov
         {
-            get => MathHelper.RadiansToDegrees(_fov);
+            get => MathHelper.RadiansToDegrees(this.fov);
             set
             {
                 var angle = MathHelper.Clamp(value, 1f, 45f);
-                _fov = MathHelper.DegreesToRadians(angle);
+                this.fov = MathHelper.DegreesToRadians(angle);
             }
         }
 
         // Get the view matrix using the amazing LookAt function described more in depth on the web tutorials
         public Matrix4 GetViewMatrix()
         {
-            return Matrix4.LookAt(Position, Position + _front, _up);
+            return Matrix4.LookAt(this.Position, this.Position + this.front, this.up);
         }
 
         // Get the projection matrix using the same method we have used up until this point
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(_fov, AspectRatio, 0.01f, 100f);
+            return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, 100f);
         }
 
         // This function is going to update the direction vertices using some of the math learned in the web tutorials
         private void UpdateVectors()
         {
             // First the front matrix is calculated using some basic trigonometry
-            _front.X = (float)Math.Cos(_pitch) * (float)Math.Cos(_yaw);
-            _front.Y = (float)Math.Sin(_pitch);
-            _front.Z = (float)Math.Cos(_pitch) * (float)Math.Sin(_yaw);
+            this.front.X = (float)Math.Cos(this.pitch) * (float)Math.Cos(this.yaw);
+            this.front.Y = (float)Math.Sin(this.pitch);
+            this.front.Z = (float)Math.Cos(this.pitch) * (float)Math.Sin(this.yaw);
 
             // We need to make sure the vectors are all normalized, as otherwise we would get some funky results
-            _front = Vector3.Normalize(_front);
+            this.front = Vector3.Normalize(this.front);
 
             // Calculate both the right and the up vector using cross product
             // Note that we are calculating the right from the global up, this behaviour might
             // not be what you need for all cameras so keep this in mind if you do not want a FPS camera
-            _right = Vector3.Normalize(Vector3.Cross(_front, Vector3.UnitY));
-            _up = Vector3.Normalize(Vector3.Cross(_right, _front));
+            this.right = Vector3.Normalize(Vector3.Cross(this.front, Vector3.UnitY));
+            this.up = Vector3.Normalize(Vector3.Cross(this.right, this.front));
         }
     }
 }

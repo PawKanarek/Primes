@@ -1,7 +1,7 @@
-﻿using System;
+﻿using OpenTK.Graphics.OpenGL4;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using OpenTK.Graphics.OpenGL4;
 using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;
 
 namespace PrimesOpenTK
@@ -15,10 +15,10 @@ namespace PrimesOpenTK
         public Texture(string path)
         {
             // Generate handle
-            Handle = GL.GenTexture();
+            this.Handle = GL.GenTexture();
 
             // Bind the handle
-            Use();
+            this.Use();
 
             // For this example, we're going to use .NET's built-in System.Drawing library to load textures.
 
@@ -33,7 +33,7 @@ namespace PrimesOpenTK
                 //   we only need ReadOnly.
                 //   Next is the pixel format we want our pixels to be in. In this case, ARGB will suffice.
                 //   We have to fully qualify the name because OpenTK also has an enum named PixelFormat.
-                var data = image.LockBits(
+                BitmapData data = image.LockBits(
                     new Rectangle(0, 0, image.Width, image.Height),
                     ImageLockMode.ReadOnly,
                     System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -91,7 +91,7 @@ namespace PrimesOpenTK
         public void Use(TextureUnit unit = TextureUnit.Texture0)
         {
             GL.ActiveTexture(unit);
-            GL.BindTexture(TextureTarget.Texture2D, Handle);
+            GL.BindTexture(TextureTarget.Texture2D, this.Handle);
         }
 
 

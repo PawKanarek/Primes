@@ -42,7 +42,6 @@ namespace PrimesOpenTK
             this.handle = GL.CreateProgram();
             GL.AttachShader(this.handle, vertexShader);
             GL.AttachShader(this.handle, fragmentShader);
-
             GL.LinkProgram(this.handle);
 
             // Cleanup - shaders are now compiled & attached to the program 

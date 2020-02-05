@@ -57,6 +57,7 @@
     <Compile Include="PreferencesModel.cs" />
     <Compile Include="Primes.cs" />
     <Compile Include="Cube.cs" />
+    <Compile Include="FpsInfo.cs" />
     <Compile Include="Window.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Texture.cs" />

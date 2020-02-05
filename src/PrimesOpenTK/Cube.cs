@@ -13,49 +13,58 @@ namespace PrimesOpenTK
         private Texture texture1;
         private Shader shader;
 
-        // x, y, z
+        //// x, y, z
+        //private static readonly float[] verticles = {
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        //     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        //    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        //    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        //    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        //    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        //     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        //     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        //     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        //     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        //     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        //    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        //    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        //     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        //     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        //    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        //    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        //};
+
         private static readonly float[] verticles = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+            -0.5f, -0.5f, 0.0f,
+             0.5f, -0.5f, 0.0f,
+             0.5f,  0.5f, 0.0f,
+             0.5f,  0.5f, 0.0f,
+            -0.5f,  0.5f, 0.0f,
+            -0.5f, -0.5f, 0.0f,
         };
 
         public void CreateVao()
@@ -80,11 +89,11 @@ namespace PrimesOpenTK
 
             var vertexLocation = this.shader.GetAttribLocation("aPosition");
             GL.EnableVertexAttribArray(vertexLocation);
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
 
-            var texCoordLocation = this.shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(texCoordLocation);
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
+            //var texCoordLocation = this.shader.GetAttribLocation("aTexCoord");
+            //GL.EnableVertexAttribArray(texCoordLocation);
+            //GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 3 * sizeof(float), 3 * sizeof(float));
         }
 
         public void RenderVao(Camera camera, double time, List<Vector3> primesCoordinates)

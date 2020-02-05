@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace PrimesOpenTK
 {
@@ -18,6 +19,8 @@ namespace PrimesOpenTK
         private double time;
         private readonly Cube cube = new Cube();
         private readonly List<Vector3> primesCoordinates = new List<Vector3>();
+        private readonly Size spiralSize = new Size(400, 400);
+        private FpsInfo fpsInfo;
 
         public Window(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -40,6 +43,13 @@ namespace PrimesOpenTK
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             this.cube.RenderVao(this.camera, this.time, this.primesCoordinates);
             this.Context.SwapBuffers();
+
+            // display fps
+            if (this.fpsInfo.Update(e.Time))
+            {
+                this.Title = this.fpsInfo.GetFpsInfo();
+            }
+
             base.OnRenderFrame(e);
         }
 
@@ -149,8 +159,8 @@ namespace PrimesOpenTK
                 return;
             }
 
-            var x = 200;
-            var y = 200;
+            var x = this.spiralSize.Width / 2;
+            var y = this.spiralSize.Height / 2;
             var totalRadius = 2;
             var currentRadius = totalRadius;
             var canIncrementRadius = false;
@@ -164,7 +174,7 @@ namespace PrimesOpenTK
                 if (Primes.primes[i])
                 {
                     this.primesCoordinates.Add(new Vector3(x, y, 0));
-                    if (y > 400 && x > 400)
+                    if (x > this.spiralSize.Width && y > this.spiralSize.Height)
                     {
                         break;
                     }

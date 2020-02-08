@@ -30,10 +30,10 @@ namespace PrimesOpenTK
         {
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
-            this.cube.CreateVao();
-            this.camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
             Primes.GetPrimesViaEratosthenesSieve();
             this.GetUlamSpiralCoordinates();
+            this.cube.CreateVao();
+            this.camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
             base.OnLoad(e);
         }
 
@@ -51,12 +51,6 @@ namespace PrimesOpenTK
             }
 
             base.OnRenderFrame(e);
-        }
-
-        protected override void OnMouseWheel(MouseWheelEventArgs e)
-        {
-            this.camera.Fov -= e.DeltaPrecise;
-            base.OnMouseWheel(e);
         }
 
         protected override void OnResize(EventArgs e)
@@ -173,7 +167,17 @@ namespace PrimesOpenTK
             {
                 if (Primes.primes[i])
                 {
-                    this.primesCoordinates.Add(new Vector3(x, y, 0));
+                    //this.primesCoordinates.Add(new Vector3(x, y, 0));
+                    this.cube.mesh.AddRange(new float[]
+                    {
+                        Cube.verticles[0] + x, Cube.verticles[1] + y, Cube.verticles[2], Cube.verticles[3], Cube.verticles[4],
+                        Cube.verticles[5] + x, Cube.verticles[6] + y, Cube.verticles[7], Cube.verticles[8], Cube.verticles[9],
+                        Cube.verticles[10] + x, Cube.verticles[11] + y, Cube.verticles[12], Cube.verticles[13], Cube.verticles[14],
+                        Cube.verticles[15] + x, Cube.verticles[16] + y, Cube.verticles[17], Cube.verticles[18], Cube.verticles[19],
+                        Cube.verticles[20] + x, Cube.verticles[21] + y, Cube.verticles[22], Cube.verticles[23], Cube.verticles[24],
+                        Cube.verticles[25] + x, Cube.verticles[26] + y, Cube.verticles[27], Cube.verticles[28], Cube.verticles[29],
+                    });
+
                     if (x > this.spiralSize.Width && y > this.spiralSize.Height)
                     {
                         break;
@@ -226,7 +230,7 @@ namespace PrimesOpenTK
                     canIncrementRadius = !canIncrementRadius;
                 }
             }
-            performance.Stop($"Created {this.primesCoordinates.Count} coordinates for tiles in {i} iterations");
+            performance.Stop($"Created {this.cube.mesh.Count / 5} coordinates for tiles in {i} iterations");
         }
 
         private enum Direction

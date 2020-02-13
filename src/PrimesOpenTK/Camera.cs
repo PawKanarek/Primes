@@ -84,7 +84,7 @@ namespace PrimesOpenTK
         // Get the projection matrix using the same method we have used up until this point
         public Matrix4 GetProjectionMatrix()
         {
-            return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, 1000f);
+            return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, float.MaxValue);
         }
 
         // This function is going to update the direction vertices using some of the math learned in the web tutorials

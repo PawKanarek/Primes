@@ -18,9 +18,8 @@ namespace PrimesOpenTK
         private Vector2 lastPos;
         private double time;
         private readonly Cube cube = new Cube();
-        private readonly List<Vector3> primesCoordinates = new List<Vector3>();
-        private readonly Size spiralSize = new Size(400, 400);
         private FpsInfo fpsInfo;
+        float cameraSpeed = 150f;
 
         public Window(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -31,7 +30,7 @@ namespace PrimesOpenTK
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
             Primes.GetPrimesViaEratosthenesSieve();
-            this.GetUlamSpiralCoordinates();
+            this.cube.GetUlamSpiralCoordinates();
             this.cube.CreateVao();
             this.camera = new Camera(Vector3.UnitZ * 3, this.Width / (float)this.Height);
             base.OnLoad(e);
@@ -41,7 +40,7 @@ namespace PrimesOpenTK
         {
             this.time += 160 * e.Time;
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            this.cube.RenderVao(this.camera, this.time, this.primesCoordinates);
+            this.cube.RenderVao(this.camera, this.time);
             this.Context.SwapBuffers();
 
             // display fps
@@ -51,6 +50,19 @@ namespace PrimesOpenTK
             }
 
             base.OnRenderFrame(e);
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            if (e.Delta > 0)
+            {
+                this.cameraSpeed -= 30;
+            }
+            else
+            {
+                this.cameraSpeed += 30; 
+            }
         }
 
         protected override void OnResize(EventArgs e)
@@ -90,7 +102,6 @@ namespace PrimesOpenTK
                 this.Exit();
             }
 
-            const float cameraSpeed = 150f;
             const float sensitivity = 0.2f;
 
             if (input.IsKeyDown(Key.W))
@@ -144,101 +155,6 @@ namespace PrimesOpenTK
             }
 
             base.OnUpdateFrame(e);
-        }
-
-        private void GetUlamSpiralCoordinates()
-        {
-            if (this.primesCoordinates.Count > 0)
-            {
-                return;
-            }
-
-            var x = this.spiralSize.Width / 2;
-            var y = this.spiralSize.Height / 2;
-            var totalRadius = 2;
-            var currentRadius = totalRadius;
-            var canIncrementRadius = false;
-            Direction direction = Direction.Right;
-            var performance = new Performance();
-            int i;
-            // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
-            // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
-            for (i = 1; i < Primes.primes.Length; i++)
-            {
-                if (Primes.primes[i])
-                {
-                    //this.primesCoordinates.Add(new Vector3(x, y, 0));
-                    this.cube.mesh.AddRange(new float[]
-                    {
-                        Cube.verticles[0] + x, Cube.verticles[1] + y, Cube.verticles[2], Cube.verticles[3], Cube.verticles[4],
-                        Cube.verticles[5] + x, Cube.verticles[6] + y, Cube.verticles[7], Cube.verticles[8], Cube.verticles[9],
-                        Cube.verticles[10] + x, Cube.verticles[11] + y, Cube.verticles[12], Cube.verticles[13], Cube.verticles[14],
-                        Cube.verticles[15] + x, Cube.verticles[16] + y, Cube.verticles[17], Cube.verticles[18], Cube.verticles[19],
-                        Cube.verticles[20] + x, Cube.verticles[21] + y, Cube.verticles[22], Cube.verticles[23], Cube.verticles[24],
-                        Cube.verticles[25] + x, Cube.verticles[26] + y, Cube.verticles[27], Cube.verticles[28], Cube.verticles[29],
-                    });
-
-                    if (x > this.spiralSize.Width && y > this.spiralSize.Height)
-                    {
-                        break;
-                    }
-                }
-
-                currentRadius--;
-
-                if (direction == Direction.Right)
-                {
-                    x++;
-                }
-                else if (direction == Direction.Up)
-                {
-                    y--;
-                }
-                else if (direction == Direction.Left)
-                {
-                    x--;
-                }
-                else if (direction == Direction.Down)
-                {
-                    y++;
-                }
-
-                if (currentRadius == 1)
-                {
-                    if (direction == Direction.Right)
-                    {
-                        direction = Direction.Up;
-                    }
-                    else if (direction == Direction.Up)
-                    {
-                        direction = Direction.Left;
-                    }
-                    else if (direction == Direction.Left)
-                    {
-                        direction = Direction.Down;
-                    }
-                    else if (direction == Direction.Down)
-                    {
-                        direction = Direction.Right;
-                    }
-
-                    if (canIncrementRadius)
-                    {
-                        totalRadius++;
-                    }
-                    currentRadius = totalRadius;
-                    canIncrementRadius = !canIncrementRadius;
-                }
-            }
-            performance.Stop($"Created {this.cube.mesh.Count / 5} coordinates for tiles in {i} iterations");
-        }
-
-        private enum Direction
-        {
-            Left = 0,
-            Up,
-            Right,
-            Down
         }
     }
 }

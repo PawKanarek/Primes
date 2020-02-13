@@ -19,7 +19,7 @@ namespace PrimesOpenTK
 
             //var limit = BigInteger.Pow(Int64.MaxValue, 3);
             //var limit = (int.MaxValue / 2) - 1;
-            var limit = Constants.ScreenWidth * Constants.ScreenHeight; //Good for tests on my PC
+            var limit = Constants.ScreenWidth * Constants.ScreenHeight * 10; //Good for tests on my PC
 
             var performance = new Performance();
             primes = new bool[limit];

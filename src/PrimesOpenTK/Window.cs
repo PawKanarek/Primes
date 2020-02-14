@@ -3,8 +3,6 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Input;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 
 namespace PrimesOpenTK
 {
@@ -14,12 +12,9 @@ namespace PrimesOpenTK
     public class Window : GameWindow
     {
         private Camera camera;
-        private bool firstMove = true;
-        private Vector2 lastPos;
         private double time;
         private readonly Cube cube = new Cube();
         private FpsInfo fpsInfo;
-        float cameraSpeed = 150f;
 
         public Window(int width, int height, string title) : base(width, height, GraphicsMode.Default, title)
         {
@@ -55,14 +50,7 @@ namespace PrimesOpenTK
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
             base.OnMouseWheel(e);
-            if (e.Delta > 0)
-            {
-                this.cameraSpeed -= 30;
-            }
-            else
-            {
-                this.cameraSpeed += 30; 
-            }
+            this.camera.ChangeSpeed(e);
         }
 
         protected override void OnResize(EventArgs e)
@@ -96,64 +84,12 @@ namespace PrimesOpenTK
             }
 
             KeyboardState input = Keyboard.GetState();
-
             if (input.IsKeyDown(Key.Escape))
             {
                 this.Exit();
             }
 
-            const float sensitivity = 0.2f;
-
-            if (input.IsKeyDown(Key.W))
-            {
-                this.camera.Position += this.camera.Front * cameraSpeed * (float)e.Time; // Forward 
-            }
-
-            if (input.IsKeyDown(Key.S))
-            {
-                this.camera.Position -= this.camera.Front * cameraSpeed * (float)e.Time; // Backwards
-            }
-
-            if (input.IsKeyDown(Key.A))
-            {
-                this.camera.Position -= this.camera.Right * cameraSpeed * (float)e.Time; // Left
-            }
-
-            if (input.IsKeyDown(Key.D))
-            {
-                this.camera.Position += this.camera.Right * cameraSpeed * (float)e.Time; // Right
-            }
-
-            if (input.IsKeyDown(Key.Space))
-            {
-                this.camera.Position += this.camera.Up * cameraSpeed * (float)e.Time; // Up 
-            }
-
-            if (input.IsKeyDown(Key.LShift))
-            {
-                this.camera.Position -= this.camera.Up * cameraSpeed * (float)e.Time; // Down
-            }
-
-            MouseState mouse = Mouse.GetState();
-
-            if (input.IsKeyDown(Key.ControlLeft))
-            {
-                if (this.firstMove)
-                {
-                    this.lastPos = new Vector2(mouse.X, mouse.Y);
-                    this.firstMove = false;
-                }
-                else
-                {
-                    var deltaX = mouse.X - this.lastPos.X;
-                    var deltaY = mouse.Y - this.lastPos.Y;
-                    this.lastPos = new Vector2(mouse.X, mouse.Y);
-
-                    this.camera.Yaw += deltaX * sensitivity;
-                    this.camera.Pitch -= deltaY * sensitivity;
-                }
-            }
-
+            this.camera.HandeMovement(e, input);
             base.OnUpdateFrame(e);
         }
     }

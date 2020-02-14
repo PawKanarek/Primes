@@ -15,6 +15,7 @@ namespace PrimesOpenTK
             this.stopwatch.Start();
             Helpers.Print(this, this.StepStepDesc, 2);
         }
+
         private string StepStepDesc => $"Step: {this.stepNumber++}. {this.message} time: {this.stopwatch.ElapsedMilliseconds}ms.";
         private string StoptDesc => $"Stop: {this.stepNumber++}. {this.message} time: {this.stopwatch.ElapsedMilliseconds}ms.";
 

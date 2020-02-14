@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Input;
 using System;
 
 namespace PrimesOpenTK
@@ -9,10 +10,13 @@ namespace PrimesOpenTK
     // been made into functions.
     public class Camera
     {
-        // Those vectors are directions pointing outwards from the camera to define how it rotated
+        private float cameraSpeed = 150f;
+
         private Vector3 front = -Vector3.UnitZ;
         private Vector3 up = Vector3.UnitY;
         private Vector3 right = Vector3.UnitX;
+        private Vector2 lastPos = Vector2.Zero;
+        private const float cameraSensitivy = 0.2f;
 
         // Rotation around the X axis (radians)
         private float pitch;
@@ -27,14 +31,8 @@ namespace PrimesOpenTK
             this.AspectRatio = aspectRatio;
         }
 
-        // The position of the camera
         public Vector3 Position { get; set; }
-        // This is simply the aspect ratio of the viewport, used for the projection matrix
         public float AspectRatio { private get; set; }
-
-        public Vector3 Front => this.front;
-        public Vector3 Up => this.up;
-        public Vector3 Right => this.right;
 
         // We convert from degrees to radians as soon as the property is set to improve performance
         public float Pitch
@@ -75,22 +73,84 @@ namespace PrimesOpenTK
             }
         }
 
-        // Get the view matrix using the amazing LookAt function described more in depth on the web tutorials
+        public void ChangeSpeed(MouseWheelEventArgs e)
+        {
+            if (e.Delta > 0)
+            {
+                this.cameraSpeed -= 30;
+            }
+            else
+            {
+                this.cameraSpeed += 30;
+            }
+        }
+
+        public void HandeMovement(FrameEventArgs e, OpenTK.Input.KeyboardState input)
+        {
+
+            if (input.IsKeyDown(Key.W))
+            {
+                this.Position += this.front * this.cameraSpeed * (float)e.Time; // Forward 
+            }
+
+            if (input.IsKeyDown(Key.S))
+            {
+                this.Position -= this.front * this.cameraSpeed * (float)e.Time; // Backwards
+            }
+
+            if (input.IsKeyDown(Key.A))
+            {
+                this.Position -= this.right * this.cameraSpeed * (float)e.Time; // Left
+            }
+
+            if (input.IsKeyDown(Key.D))
+            {
+                this.Position += this.right * this.cameraSpeed * (float)e.Time; // Right
+            }
+
+            if (input.IsKeyDown(Key.Space))
+            {
+                this.Position += this.up * this.cameraSpeed * (float)e.Time; // Up 
+            }
+
+            if (input.IsKeyDown(Key.LShift))
+            {
+                this.Position -= this.up * this.cameraSpeed * (float)e.Time; // Down
+            }
+
+            MouseState mouse = Mouse.GetState();
+            if (mouse.IsButtonUp(MouseButton.Left) && this.lastPos != Vector2.Zero)
+            {
+                this.lastPos = Vector2.Zero;
+            }
+
+            if (mouse.IsButtonDown(MouseButton.Left))
+            {
+                if (this.lastPos == Vector2.Zero)
+                {
+                    this.lastPos = new Vector2(mouse.X, mouse.Y);
+                }
+
+                var deltaX = mouse.X - this.lastPos.X;
+                var deltaY = mouse.Y - this.lastPos.Y;
+                this.lastPos = new Vector2(mouse.X, mouse.Y);
+                this.Yaw += deltaX * cameraSensitivy;
+                this.Pitch -= deltaY * cameraSensitivy;
+            }
+        }
+
         public Matrix4 GetViewMatrix()
         {
             return Matrix4.LookAt(this.Position, this.Position + this.front, this.up);
         }
 
-        // Get the projection matrix using the same method we have used up until this point
         public Matrix4 GetProjectionMatrix()
         {
             return Matrix4.CreatePerspectiveFieldOfView(this.fov, this.AspectRatio, 0.01f, float.MaxValue);
         }
 
-        // This function is going to update the direction vertices using some of the math learned in the web tutorials
         private void UpdateVectors()
         {
-            // First the front matrix is calculated using some basic trigonometry
             this.front.X = (float)Math.Cos(this.pitch) * (float)Math.Cos(this.yaw);
             this.front.Y = (float)Math.Sin(this.pitch);
             this.front.Z = (float)Math.Cos(this.pitch) * (float)Math.Sin(this.yaw);

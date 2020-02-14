@@ -55,6 +55,7 @@ namespace PrimesOpenTK
         {
             GL.UseProgram(this.handle);
         }
+
         public void SetInt(string name, int value)
         {
             var location = GL.GetUniformLocation(this.handle, name);

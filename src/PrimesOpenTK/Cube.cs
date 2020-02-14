@@ -134,19 +134,22 @@ namespace PrimesOpenTK
             int i;
             // go in lenght of "curreentRadius" in "direction", move 1 pixel at time (x++ || y-- || x-- || y++)
             // change "driection" and reset "currentRadius" if current "currentRadius == 1" (reched corner) and every two times "if canIncrementRadius" increment "totalRadius++"
+            var z = 0.01f;
+            
             for (i = 1; i < Primes.primes.Length; i++)
             {
+                z += 0.01f;
                 if (Primes.primes[i])
                 {
                     //this.primesCoordinates.Add(new Vector3(x, y, 0));
                     this.mesh.AddRange(new float[]
                     {
-                        Cube.verticles[0] + x, Cube.verticles[1] + y, Cube.verticles[2], Cube.verticles[3], Cube.verticles[4],
-                        Cube.verticles[5] + x, Cube.verticles[6] + y, Cube.verticles[7], Cube.verticles[8], Cube.verticles[9],
-                        Cube.verticles[10] + x, Cube.verticles[11] + y, Cube.verticles[12], Cube.verticles[13], Cube.verticles[14],
-                        Cube.verticles[15] + x, Cube.verticles[16] + y, Cube.verticles[17], Cube.verticles[18], Cube.verticles[19],
-                        Cube.verticles[20] + x, Cube.verticles[21] + y, Cube.verticles[22], Cube.verticles[23], Cube.verticles[24],
-                        Cube.verticles[25] + x, Cube.verticles[26] + y, Cube.verticles[27], Cube.verticles[28], Cube.verticles[29],
+                        Cube.verticles[0] + x, Cube.verticles[1] + y, Cube.verticles[2] + z, Cube.verticles[3], Cube.verticles[4],
+                        Cube.verticles[5] + x, Cube.verticles[6] + y, Cube.verticles[7] + z, Cube.verticles[8], Cube.verticles[9],
+                        Cube.verticles[10] + x, Cube.verticles[11] + y, Cube.verticles[12] + z, Cube.verticles[13], Cube.verticles[14],
+                        Cube.verticles[15] + x, Cube.verticles[16] + y, Cube.verticles[17] + z, Cube.verticles[18], Cube.verticles[19],
+                        Cube.verticles[20] + x, Cube.verticles[21] + y, Cube.verticles[22] + z, Cube.verticles[23], Cube.verticles[24],
+                        Cube.verticles[25] + x, Cube.verticles[26] + y, Cube.verticles[27] + z, Cube.verticles[28], Cube.verticles[29],
                     });
 
                     if (x > this.spiralSize.Width && y > this.spiralSize.Height)

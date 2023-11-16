@@ -1,11 +1,12 @@
 # Primes
-New version
+Visualisation of [Ulam spiral](https://en.wikipedia.org/wiki/Ulam_spiral)
+New version (3D)
 
 
 ![jif](https://github.com/PawKanarek/Primes/blob/master/Example/primes.gif)
 
 
-Old version
+Old version (2D)
 
 
 
